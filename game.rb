@@ -2,8 +2,10 @@
 require_relative 'cards'
 require_relative 'player'
 require_relative 'dealer'
+require_relative 'actions'
 
 class Menu
+  include Actions
   PL = 0
   DL = 1
   BET = 10
@@ -37,9 +39,9 @@ class Menu
     puts "Cards have been dealt!"
     players[PL].cards << Cards.new.take_card << Cards.new.take_card
     players[DL].cards << Cards.new.take_card << Cards.new.take_card
-    puts "Your cards\n#{show_cards(PL)}\nYour count: #{players[PL].current_count}"
+    puts "Your cards\n#{show_cards(PL)}\nYour count: #{players[PL].current_count_player}"
     puts "Dealer's card\n🂠 🂠"
-    players[DL].current_count
+    players[DL].current_count_dealer
     place_bet
     p @players
     next_step
@@ -60,18 +62,18 @@ class Menu
   def dealers_move
     puts "The move goes to the dealer"
     sleep(3)
-    players[DL].current_count
-    if players[DL].current_count >= 17
+    # players[DL].current_count_dealer
+    if players[DL].current_count_dealer >= 17 && players[DL].current_count_dealer < 22
       puts "The dealer misses a move"
       next_step
     else
       players[DL].cards << Cards.new.take_card
-      players[DL].current_count
-      if players[DL].current_count == 21
+      # players[DL].current_count_dealer_new
+      if players[DL].current_count_dealer_new == 21
         you_lose
-      elsif players[DL].current_count < 21
+      elsif players[DL].current_count_dealer_new < 21
         puts "Dealer took a card\n🂠 🂠 🂠"
-        next_step
+        players[PL].cards.size == 3 ? open_the_cards : next_step
       else
         you_won
       end
@@ -81,10 +83,10 @@ class Menu
   def add_a_card
     players[PL].cards << Cards.new.take_card
     puts "Player's cards: #{show_cards(PL)}"
-    players[PL].current_count
-    if players[PL].current_count == 21
+    players[PL].current_count_player_new
+    if players[PL].current_count_player_new == 21
       you_won
-    elsif players[PL].current_count > 21
+    elsif players[PL].current_count_player_new > 21
       you_lose
     else
       dealers_move
@@ -94,9 +96,10 @@ class Menu
   def open_the_cards
     current_points(PL)
     current_points(DL)
-    if players[DL].current_count < players[PL].current_count && players[PL].current_count <= 21
+    if players[DL].current_count_dealer_new < players[PL].current_count_player_new &&
+       players[PL].current_count_player_new <= 21
       you_won
-    elsif players[DL].current_count == players[PL].current_count
+    elsif players[DL].current_count_dealer_new == players[PL].current_count_player_new
       puts "You have the same number of points!"
       return_bet
       sleep(3)
@@ -141,10 +144,27 @@ class Menu
   end
 
   def you_won
-    puts "Player's cards: #{show_cards(PL)}"
-    puts "Player's points: #{current_points(PL)}"
-    puts "Dealer's cards: #{show_cards(DL)}"
-    puts "Dealer's points: #{current_points(DL)}"
+    if players[PL].cards.size == 2 && players[DL].cards.size == 2
+      puts "Player's cards: #{show_cards(PL)}"
+      puts "Player's points: #{current_points(PL)}"
+      puts "Dealer's cards: #{show_cards(DL)}"
+      puts "Dealer's points: #{current_points(DL)}"
+    elsif players[PL].cards.size == 3 && players[DL].cards.size == 2
+      puts "Player's cards: #{show_cards(PL)}"
+      puts "Player's points: #{current_points_with_new(PL)}"
+      puts "Dealer's cards: #{show_cards(DL)}"
+      puts "Dealer's points: #{current_points(DL)}"
+    elsif players[PL].cards.size == 2 && players[DL].cards.size == 3
+      puts "Player's cards: #{show_cards(PL)}"
+      puts "Player's points: #{current_points(PL)}"
+      puts "Dealer's cards: #{show_cards(DL)}"
+      puts "Dealer's points: #{current_points_with_new(DL)}"
+    else
+      puts "Player's cards: #{show_cards(PL)}"
+      puts "Player's points: #{current_points_with_new(PL)}"
+      puts "Dealer's cards: #{show_cards(DL)}"
+      puts "Dealer's points: #{current_points_with_new(DL)}"
+    end
     puts "Congratulations, you've won!"
     won_bet
     sleep(3)
@@ -152,7 +172,13 @@ class Menu
   end
 
   def current_points(num)
-    players[num].current_count
+    players[PL].current_count_player if num == PL
+    players[DL].current_count_dealer if num == DL
+  end
+
+  def current_points_with_new(num)
+    players[PL].current_count_player_new if num == PL
+    players[DL].current_count_dealer_new if num == DL
   end
 
   def place_bet

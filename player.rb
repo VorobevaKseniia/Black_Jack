@@ -6,7 +6,7 @@ class Player
 
   def initialize(name)
     @name = name
-    @bank = 10
+    @bank = 100
     @cards = []
     @count = 0
     validate!

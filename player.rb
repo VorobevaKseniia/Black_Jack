@@ -1,13 +1,12 @@
 # frozen_string_literal: true
-require_relative 'actions'
+
 class Player
-  include Actions
   attr_reader :name
   attr_accessor :bank, :cards, :count
 
   def initialize(name)
     @name = name
-    @bank = 100
+    @bank = 10
     @cards = []
     @count = 0
     validate!
@@ -31,6 +30,7 @@ class Player
   end
 
   private
+
   def validate!
     raise 'Enter your name!' if @name.empty?
   end

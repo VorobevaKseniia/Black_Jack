@@ -1,11 +1,11 @@
 # frozen_string_literal: true
+
 require_relative 'cards'
 require_relative 'player'
 require_relative 'dealer'
-require_relative 'actions'
+
 
 class Menu
-  include Actions
   PL = 0
   DL = 1
   BET = 10
@@ -36,8 +36,8 @@ class Menu
   end
 
   def start_game
-    puts "Cards have been dealt!"
-    2. times {add_card(PL) && add_card(DL)}
+    puts 'Cards have been dealt!'
+    2.times { add_card(PL) && add_card(DL) }
     puts "Your cards\n#{show_cards(PL)}\nYour count: #{players[PL].count}"
     puts "Dealer's card\n🂠 🂠"
     place_bet
@@ -58,10 +58,10 @@ class Menu
   end
 
   def dealers_move
-    puts "The move goes to the dealer"
+    puts 'The move goes to the dealer'
     sleep(3)
     if players[DL].count >= 17 && players[DL].count < 22
-      puts "The dealer misses a move"
+      puts 'The dealer misses a move'
       next_step
     else
       add_card(DL)
@@ -92,7 +92,7 @@ class Menu
     if players[DL].count < players[PL].count
       you_won
     elsif players[DL].count == players[PL].count
-      puts "You have the same number of points!"
+      puts 'You have the same number of points!'
       refresh_count
       return_bet
       sleep(3)
@@ -105,10 +105,9 @@ class Menu
   private
 
   def greeting
-    puts "Enter your name: "
+    puts 'Enter your name: '
     name = Player.new(gets.chomp.capitalize!)
-  rescue StandardError => e
-    puts e.message
+  rescue StandardError
     retry
   else
     @players << name << Dealer.new(Dealer)
@@ -117,12 +116,12 @@ class Menu
   end
 
   def add_card(who)
-    card =  Cards.new.take_card
+    card = Cards.new.take_card
     players[who].cards << card && players[who].current_count(card)
   end
 
   def show_cards(num)
-    players[num].cards.map {|card| card[0]}
+    players[num].cards.map { |card| card[0] }
   end
 
   def delete_cards
@@ -135,10 +134,11 @@ class Menu
     puts "Player's points: #{players[PL].count}"
     puts "Dealer's cards: #{show_cards(DL)}"
     puts "Dealer's points: #{players[DL].count}"
-    puts "You lose!"
+    puts 'You lose!'
     refresh_count
     lose_bet
     sleep(3)
+    check_bank
     continue
   end
 
@@ -151,30 +151,31 @@ class Menu
     refresh_count
     won_bet
     sleep(3)
+    check_bank
     continue
   end
 
   def place_bet
-    players[PL].increase_bank(-BET)
-    players[DL].increase_bank(-BET)
-    puts "Amount won: #{@total += BET*2}"
+    players[PL].bank -= BET
+    players[DL].bank -= BET
+    puts "Amount won: #{@total += BET * 2}"
   end
 
   def won_bet
-    players[PL].increase_bank(@total)
+    players[PL].bank += @total
     @total = 0
     puts "Your bank: #{players[PL].bank}\nDealer's bank: #{players[DL].bank}"
   end
 
   def lose_bet
-    players[DL].increase_bank(@total)
+    players[DL].bank += @total
     @total = 0
     puts "Your bank: #{players[PL].bank}\nDealer's bank: #{players[DL].bank}"
   end
 
   def return_bet
-    players[PL].increase_bank(BET)
-    players[DL].increase_bank(BET)
+    players[PL].bank += BET
+    players[DL].bank += BET
     @total = 0
     puts "Your bank: #{players[PL].bank}\nDealer's bank: #{players[DL].bank}"
   end
@@ -182,6 +183,20 @@ class Menu
   def refresh_count
     players[PL].count = 0
     players[DL].count = 0
+  end
+
+  def check_bank
+    if players[PL].bank.zero?
+      puts 'You lose! You have run out of money!'
+      sleep(2)
+      2.times { @players.pop }
+      start
+    elsif players[DL].bank.zero?
+      puts "Congratulations, you've won! Dealer ran out of money!"
+      sleep(2)
+      2.times { @players.pop }
+      start
+    end
   end
 end
 
